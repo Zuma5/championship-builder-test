@@ -1,0 +1,416 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Championship Builder</title>
+    <link rel="icon" type="image/png" href="img/champ.png">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f9;
+            color: #333;
+            padding: 20px;
+        }
+        h1 {
+            color: #451d59;
+        }
+        .form-section {
+            margin: 10px;
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .form-section h3 {
+            margin-top: 0;
+            color: #3cbfa0;
+        }
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+        }
+        input[type="text"], textarea {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        input[type="checkbox"] {
+            margin-right: 10px;
+        }
+        button {
+            background-color: #3cbfa0;
+            color: #fff;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-right: 10px;
+        }
+        button:hover {
+            background-color: #66e8e6;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        table, th, td {
+            border: 1px solid #ccc;
+        }
+        th, td {
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #736cba;
+            color: #fff;
+        }
+        .geo {
+            padding: 7px 7px;
+            background-color: #e890a6;
+            font-weight: 600;
+            color: #451d59;
+            border: 1px solid #3cbfa0;
+            border-radius: 15px;
+            margin-right: 5px;
+            margin-bottom: 5px;
+            display: inline-block;
+        }
+        .top_posit {
+            display: flex;
+            justify-content: space-evenly;
+        }
+        .top_posit>div {
+            margin-right: 20px;
+        }
+        #amounts-form {
+            display: flex;
+            flex-wrap: wrap;
+            text-align: center;
+            justify-content: start;
+            margin-top: 15px;
+        }
+        .form-section>textarea {
+            width: 90%;
+            height: 180px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="form-section">
+    <div class="top_posit">
+        <div>
+            <label for="root-variable">Корень переменной:</label>
+            <input type="text" id="root-variable" name="root-variable">
+        </div>
+
+        <div>
+            <label for="positions">Призовые позиции:</label>
+            <input type="text" id="positions" name="positions" placeholder="например, 1,2,3,PF,MINBET">
+        </div>
+        
+        <div>
+            <label for="freespin-positions">Freespin:</label>
+            <input type="text" id="freespin-positions" name="freespin-positions" placeholder="например, 101-150">
+        </div>
+        
+        <div>
+            <label for="freebet-positions">Freebet:</label>
+            <input type="text" id="freebet-positions" name="freebet-positions" placeholder="например, 151-200">
+        </div>
+
+        <div>
+            <label for="bonus-casino-positions">Bonus Casino:</label>
+            <input type="text" id="bonus-casino-positions" name="bonus-casino-positions" placeholder="например, 201-250">
+        </div>
+
+        <div>
+            <label for="bonus-sport-positions">Bonus Sport:</label>
+            <input type="text" id="bonus-sport-positions" name="bonus-sport-positions" placeholder="например, 251-300">
+        </div>
+    </div>
+
+    <label>Выберите валюты:</label><br>
+    <span class="geo"><input type="checkbox" name="currencies" value="EUR" checked> EUR</span>
+    <span class="geo"><input type="checkbox" name="currencies" value="USD" checked> USD</span>
+    <span class="geo"><input type="checkbox" name="currencies" value="KZT" checked> KZT</span>
+    <span class="geo"><input type="checkbox" name="currencies" value="AZN" checked> AZN</span>
+    <span class="geo"><input type="checkbox" name="currencies" value="UZS" checked> UZS</span>
+    <span class="geo"><input type="checkbox" name="currencies" value="INR" checked> INR</span>
+    <span class="geo"><input type="checkbox" name="currencies" value="CLP" checked> CLP</span>
+    <span class="geo"><input type="checkbox" name="currencies" value="MXN" checked> MXN</span>
+    <span class="geo"><input type="checkbox" name="currencies" value="CAD" checked> CAD</span>
+    <span class="geo"><input type="checkbox" name="currencies" value="BDT" checked> BDT</span>
+    <span class="geo"><input type="checkbox" name="currencies" value="GT" checked> GT</span>
+    <span class="geo"><input type="checkbox" name="currencies" value="HN" checked> HN</span>
+    <span class="geo"><input type="checkbox" name="currencies" value="BO" checked> BO</span><br><br>
+
+    <button onclick="generateForm()">🧩 Группировать</button>
+    
+</div>
+
+<div id="amounts-form" class="form-section"></div>
+
+<button onclick="downloadCSV()">📜 Скачать CSV</button>
+<button onclick="downloadStageCSV()">📜 Скачать CSV для этапов</button>
+<button onclick="generateTable()">🧱 Создать таблицу</button>
+<button onclick="clearValues()">🧹 Clear</button>
+
+<table id="prizes-table">
+    <thead>
+        <tr>
+            <th>Name</th>
+        </tr>
+    </thead>
+    <tbody>
+        <!-- Data rows will be inserted here by the script -->
+    </tbody>
+</table>
+
+<script>
+const currencyFormats = {
+    'EUR': (value) => `€ ${value.toLocaleString()}`,
+    'USD': (value) => `$ ${value.toLocaleString()}`,
+    'KZT': (value) => `${value.toLocaleString()} ₸`,
+    'AZN': (value) => `${value.toLocaleString()} ₼`,
+    'UZS': (value) => `${value.toLocaleString()} SO'M`,
+    'INR': (value) => `${formatINR(value)} INR`,
+    'CLP': (value) => `$ ${value.toLocaleString()}`,
+    'MXN': (value) => `$ ${value.toLocaleString()}`,
+    'CAD': (value) => `$ ${value.toLocaleString()}`,
+    'BDT': (value) => `${formatBDT(value)} BDT`,
+    'GT': (value) => `Q${value.toLocaleString('en-US')}`, // Используем 'en-US' для запятых
+    'HN': (value) => `L ${value.toLocaleString('en-US')}`,
+    'BO': (value) => `Bs ${value.toLocaleString('en-US')}`
+};
+
+function formatINR(value) {
+    return value.toLocaleString('en-IN');
+}
+
+function formatBDT(value) {
+    return value.toLocaleString('en-IN');
+}
+
+function generateForm() {
+    const rootVariable = document.getElementById('root-variable').value;
+    const positions = document.getElementById('positions').value.split(',');
+    const selectedCurrencies = Array.from(document.querySelectorAll('input[name="currencies"]:checked')).map(el => el.value);
+    const amountsForm = document.getElementById('amounts-form');
+
+    amountsForm.innerHTML = '';
+
+    selectedCurrencies.forEach(currency => {
+        const currencySection = document.createElement('div');
+        currencySection.classList.add('form-section');
+
+        const currencyLabel = document.createElement('h3');
+        currencyLabel.textContent = currency;
+        currencySection.appendChild(currencyLabel);
+
+        const textArea = document.createElement('textarea');
+        textArea.id = `${currency}-values`;
+        textArea.classList.add('textarea');
+        textArea.placeholder = `Введите значения для ${currency}, каждое значение с новой строки...\nПорядок: ${positions.join(',')}`;
+        currencySection.appendChild(textArea);
+
+        amountsForm.appendChild(currencySection);
+    });
+
+    const thead = document.getElementById('prizes-table').getElementsByTagName('thead')[0];
+    const headerRow = thead.rows[0];
+    while (headerRow.cells.length > 1) {
+        headerRow.deleteCell(-1);
+    }
+    selectedCurrencies.forEach(currency => {
+        const th = document.createElement('th');
+        th.textContent = currency;
+        headerRow.appendChild(th);
+    });
+}
+
+function generateTable() {
+    const rootVariable = document.getElementById('root-variable').value;
+    const positions = document.getElementById('positions').value.split(',');
+    const selectedCurrencies = Array.from(document.querySelectorAll('input[name="currencies"]:checked')).map(el => el.value);
+    const tbody = document.getElementById('prizes-table').getElementsByTagName('tbody')[0];
+
+    tbody.innerHTML = '';
+
+    let allSuffixes = positions;
+
+    allSuffixes.forEach((suffix, i) => {
+        const tr = document.createElement('tr');
+        const variableCell = document.createElement('td');
+        variableCell.textContent = `${rootVariable}${suffix}`;
+        tr.appendChild(variableCell);
+
+        selectedCurrencies.forEach(currency => {
+            const amountCell = document.createElement('td');
+            const input = document.getElementById(`${currency}-values`);
+            if (input) {
+                const amounts = input.value.split('\n').map(val => {
+                    if (val.startsWith('[') && val.endsWith(']')) {
+                        return val.slice(1, -1);
+                    } else {
+                        let parsedValue = parseFloat(val.trim().replace(/[^\d.,]/g, '').replace(',', '.'));
+                        return isNaN(parsedValue) ? 'не число' : currencyFormats[currency](parsedValue);
+                    }
+                });
+                const amount = amounts[i] || 'нет данных';
+                amountCell.textContent = amount;
+            } else {
+                amountCell.textContent = 'нет данных';
+            }
+            tr.appendChild(amountCell);
+        });
+
+        tbody.appendChild(tr);
+    });
+}
+
+function clearValues() {
+    const selectedCurrencies = Array.from(document.querySelectorAll('input[name="currencies"]:checked')).map(el => el.value);
+
+    selectedCurrencies.forEach(currency => {
+        const textArea = document.getElementById(`${currency}-values`);
+        if (textArea) {
+            const lines = textArea.value.split('\n').map(line => {
+                if (line.startsWith('[') && line.endsWith(']')) {
+                    return line;
+                } else {
+                    let cleanedValue = line.replace(/[^\d,.-]/g, '');
+                    if (currency === 'INR' || currency === 'BDT') {
+                        cleanedValue = cleanedValue.replace(/,/g, '');
+                    }
+                    return cleanedValue;
+                }
+            });
+            textArea.value = lines.join('\n');
+        }
+    });
+}
+
+function downloadCSV() {
+    const rootVariable = document.getElementById('root-variable').value;
+    const positions = document.getElementById('positions').value.split(',');
+    const selectedCurrencies = Array.from(document.querySelectorAll('input[name="currencies"]:checked')).map(el => el.value);
+
+    // Полный список всех валют
+    const allCurrencies = ["EUR", "USD", "KZT", "AZN", "UZS", "INR", "CLP", "MXN", "CAD", "BDT", "GT", "HN", "BO"];
+    const csvHeaders = ["Name"].concat(allCurrencies);
+
+    let csvContent = "data:text/csv;charset=utf-8,";
+    csvContent += csvHeaders.join(",") + "\n";
+
+    positions.forEach((suffix) => {
+        let row = `${rootVariable}${suffix}`;
+        allCurrencies.forEach(currency => {
+            const input = document.getElementById(`${currency}-values`);
+            if (input) {
+                const amounts = input.value.split('\n');
+                const amount = amounts[positions.indexOf(suffix)] || '';
+                if (amount.startsWith('[') && amount.endsWith(']')) {
+                    // Сохраняем значение с квадратными скобками без изменений
+                    row += `,${amount}`;
+                } else if (!isNaN(parseFloat(amount))) {
+                    // Форматируем значение с учётом валютного формата
+                    let formattedValue = currencyFormats[currency](parseFloat(amount));
+                    if (formattedValue.includes(',')) {
+                        // Заключаем в кавычки, если есть запятая
+                        formattedValue = `"${formattedValue}"`;
+                    }
+                    row += `,${formattedValue}`;
+                } else {
+                    row += `,`;
+                }
+            } else {
+                row += `,`; // Добавляем пустую ячейку
+            }
+        });
+        csvContent += row + "\n";
+    });
+
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", "tournament_prizes.csv");
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+}
+
+
+function downloadStageCSV() {
+    const rootVariable = document.getElementById('root-variable').value;
+    const positions = document.getElementById('positions').value.split(',').map(pos => pos.trim());
+    const freespinPositions = document.getElementById('freespin-positions').value.split(',').map(pos => pos.trim());
+    const freebetPositions = document.getElementById('freebet-positions').value.split(',').map(pos => pos.trim());
+    const bonusCasinoPositions = document.getElementById('bonus-casino-positions').value.split(',').map(pos => pos.trim());
+    const bonusSportPositions = document.getElementById('bonus-sport-positions').value.split(',').map(pos => pos.trim());
+    const selectedCurrencies = Array.from(document.querySelectorAll('input[name="currencies"]:checked')).map(el => el.value);
+
+    const csvHeaders = ["Rew Users From", "Rew Users To", "Wallet/Type", "BonusID", "Text", "Reward Variable"].concat(selectedCurrencies);
+
+    let csvContent = "data:text/csv;charset=utf-8,";
+    csvContent += csvHeaders.join(",") + "\n";
+
+    positions
+        .filter(pos => /^\d+([_-]\d+)?$/.test(pos)) // Учитываем диапазоны, разделённые "-" или "_"
+        .forEach((suffix) => {
+            let [from, to] = suffix.includes('-') || suffix.includes('_') ? suffix.split(/[-_]/).map(Number) : [Number(suffix), Number(suffix)];
+            let walletType = 'Real Money';
+            let bonusID = '';
+            let text = '';
+
+            if (freespinPositions.includes(suffix)) {
+                walletType = 'Freespin';
+                bonusID = '1';
+            } else if (freebetPositions.includes(suffix)) {
+                walletType = 'Freebet';
+                bonusID = '1';
+            } else if (bonusCasinoPositions.includes(suffix)) {
+                walletType = 'Bonus Casino';
+                bonusID = '1';
+            } else if (bonusSportPositions.includes(suffix)) {
+                walletType = 'Bonus Sport';
+                bonusID = '1';
+            }
+
+            let row = `${from},${to},${walletType},${bonusID},${text},${rootVariable}${suffix}`;
+
+            selectedCurrencies.forEach((currency) => {
+                const input = document.getElementById(`${currency}-values`);
+                if (input) {
+                    const amounts = input.value.split('\n');
+                    const amount = amounts[positions.indexOf(suffix)] || '';
+                    row += `,${amount.replace(/[^\d]/g, '')}`;
+                } else {
+                    row += `,`;
+                }
+            });
+
+            csvContent += row + "\n";
+        });
+
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", "tournament_stages.csv");
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+}
+
+</script>
+
+</script>
+
+</body>
+</html>
