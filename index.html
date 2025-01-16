@@ -147,9 +147,9 @@
     <span class="geo"><input type="checkbox" name="currencies" value="MXN" checked> MXN</span>
     <span class="geo"><input type="checkbox" name="currencies" value="CAD" checked> CAD</span>
     <span class="geo"><input type="checkbox" name="currencies" value="BDT" checked> BDT</span>
-    <span class="geo"><input type="checkbox" name="currencies" value="GT" checked> GT</span>
-    <span class="geo"><input type="checkbox" name="currencies" value="HN" checked> HN</span>
-    <span class="geo"><input type="checkbox" name="currencies" value="BO" checked> BO</span><br><br>
+    <span class="geo"><input type="checkbox" name="currencies" value="GTQ" checked> GTQ</span>
+    <span class="geo"><input type="checkbox" name="currencies" value="HNL" checked> HNL</span>
+    <span class="geo"><input type="checkbox" name="currencies" value="BOB" checked> BOB</span><br><br>
 
     <button onclick="generateForm()">🧩 Группировать</button>
     
@@ -185,9 +185,9 @@ const currencyFormats = {
     'MXN': (value) => `$ ${value.toLocaleString()}`,
     'CAD': (value) => `$ ${value.toLocaleString()}`,
     'BDT': (value) => `${formatBDT(value)} BDT`,
-    'GT': (value) => `Q${value.toLocaleString('en-US')}`, // Используем 'en-US' для запятых
-    'HN': (value) => `L ${value.toLocaleString('en-US')}`,
-    'BO': (value) => `Bs ${value.toLocaleString('en-US')}`
+    'GTQ': (value) => `Q${value.toLocaleString('en-US')}`, // Используем 'en-US' для запятых
+    'HNL': (value) => `L ${value.toLocaleString('en-US')}`,
+    'BOB': (value) => `Bs ${value.toLocaleString('en-US')}`
 };
 
 function formatINR(value) {
@@ -298,45 +298,24 @@ function clearValues() {
 }
 
 function downloadCSV() {
-    const rootVariable = document.getElementById('root-variable').value;
-    const positions = document.getElementById('positions').value.split(',');
-    const selectedCurrencies = Array.from(document.querySelectorAll('input[name="currencies"]:checked')).map(el => el.value);
-
-    // Полный список всех валют
-    const allCurrencies = ["EUR", "USD", "KZT", "AZN", "UZS", "INR", "CLP", "MXN", "CAD", "BDT", "GT", "HN", "BO"];
-    const csvHeaders = ["Name"].concat(allCurrencies);
-
+    const prizesTable = document.getElementById("prizes-table"); // Получаем таблицу
+    const rows = prizesTable.querySelectorAll("tr"); // Все строки таблицы
     let csvContent = "data:text/csv;charset=utf-8,";
-    csvContent += csvHeaders.join(",") + "\n";
 
-    positions.forEach((suffix) => {
-        let row = `${rootVariable}${suffix}`;
-        allCurrencies.forEach(currency => {
-            const input = document.getElementById(`${currency}-values`);
-            if (input) {
-                const amounts = input.value.split('\n');
-                const amount = amounts[positions.indexOf(suffix)] || '';
-                if (amount.startsWith('[') && amount.endsWith(']')) {
-                    // Сохраняем значение с квадратными скобками без изменений
-                    row += `,${amount}`;
-                } else if (!isNaN(parseFloat(amount))) {
-                    // Форматируем значение с учётом валютного формата
-                    let formattedValue = currencyFormats[currency](parseFloat(amount));
-                    if (formattedValue.includes(',')) {
-                        // Заключаем в кавычки, если есть запятая
-                        formattedValue = `"${formattedValue}"`;
-                    }
-                    row += `,${formattedValue}`;
-                } else {
-                    row += `,`;
-                }
-            } else {
-                row += `,`; // Добавляем пустую ячейку
-            }
+    // Заголовок из первой строки таблицы
+    const headers = Array.from(rows[0].querySelectorAll("th")).map(th => `"${th.textContent.trim()}"`);
+    csvContent += headers.join(",") + "\n";
+
+    // Данные из строк таблицы
+    Array.from(rows).slice(1).forEach(row => {
+        const cells = Array.from(row.querySelectorAll("td")).map(td => {
+            const value = td.textContent.trim();
+            return `"${value}"`; // Берем все значения в кавычки
         });
-        csvContent += row + "\n";
+        csvContent += cells.join(",") + "\n";
     });
 
+    // Скачивание файла
     const encodedUri = encodeURI(csvContent);
     const link = document.createElement("a");
     link.setAttribute("href", encodedUri);
